@@ -3,12 +3,13 @@ import {
 } from '@ionic/react';
 import { chevronBack, chevronForward, locationOutline } from 'ionicons/icons';
 import { useEffect, useMemo, useState } from 'react';
-import { analyzeMonth, type DayInfo, type Location } from './astro';
+import { analyzeMonth, type DayInfo, type EventWindows, type Location } from './astro';
 import { syncCarEvents } from './carExport';
 import { upgradedGpsLabel } from './geocode';
 import { Calendar } from './components/Calendar';
 import { DayDetail } from './components/DayDetail';
-import { SunsetCrescentIcon, SunsetFullMoonIcon } from './components/Icons';
+import { EventFilters } from './components/EventFilters';
+import { loadWindows, saveWindows } from './eventSettings';
 import { LocationModal } from './components/LocationModal';
 import { PullToRefresh } from './PullToRefresh';
 
@@ -44,6 +45,12 @@ export default function App() {
   // slide-in, so the calendar doesn't flash up first.
   const [restoring, setRestoring] = useState(() => window.location.hash === LOCATION_HASH);
   const [selected, setSelected] = useState<DayInfo | null>(null);
+  const [windows, setWindows] = useState<EventWindows>(loadWindows);
+
+  function updateWindows(w: EventWindows) {
+    setWindows(w);
+    saveWindows(w);
+  }
 
   // First launch: open the location page. Location permission is only requested
   // when the user taps "Use my current location" there.
@@ -83,11 +90,11 @@ export default function App() {
   // Keep the Android Auto screen's data current (runs after first paint; no-op off Android).
   useEffect(() => {
     if (!location) return;
-    const t = setTimeout(() => void syncCarEvents(location), 800);
+    const t = setTimeout(() => void syncCarEvents(location, windows), 800);
     return () => clearTimeout(t);
-  }, [location]);
+  }, [location, windows]);
 
-  const days = useMemo(() => (location ? analyzeMonth(year, month, location) : []), [year, month, location]);
+  const days = useMemo(() => (location ? analyzeMonth(year, month, location, windows) : []), [year, month, location, windows]);
 
   const shift = (delta: number) => {
     const d = new Date(year, month + delta, 1);
@@ -131,10 +138,7 @@ export default function App() {
                 <p className="loc-label">{location.label ?? `${location.latitude.toFixed(2)}, ${location.longitude.toFixed(2)}`}</p>
                 <Calendar year={year} month={month} days={days} onSelect={setSelected} />
 
-                <div className="legend">
-                  <span><SunsetFullMoonIcon size={22} /> Moonrise within ±1h of sunset</span>
-                  <span><SunsetCrescentIcon size={22} /> Moonset 30m–2.5h after sunset</span>
-                </div>
+                <EventFilters windows={windows} onChange={updateWindows} />
               </>
             ) : (
               <div className="empty-state">

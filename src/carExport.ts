@@ -1,6 +1,6 @@
 import { Capacitor } from '@capacitor/core';
 import { Preferences } from '@capacitor/preferences';
-import { analyzeDay, type Location } from './astro';
+import { analyzeDay, DEFAULT_WINDOWS, type EventWindows, type Location } from './astro';
 
 /**
  * Precomputes upcoming qualifying evenings and saves them to native storage so the
@@ -28,6 +28,8 @@ interface CarPayload {
   startDate: string; // first day covered (1st of the month it was generated in)
   endDate: string; // last day covered
   location: Location;
+  /** The calendar's event windows the events were computed with. */
+  windows?: EventWindows;
   events: CarEvent[];
 }
 
@@ -36,10 +38,10 @@ const ymd = (d: Date) =>
 
 const monthStart = (d: Date) => new Date(d.getFullYear(), d.getMonth(), 1);
 
-export function computeCarEvents(loc: Location, from: Date, days: number): CarEvent[] {
+export function computeCarEvents(loc: Location, from: Date, days: number, windows: EventWindows = DEFAULT_WINDOWS): CarEvent[] {
   const events: CarEvent[] = [];
   for (let i = 0; i < days; i++) {
-    const day = analyzeDay(new Date(from.getFullYear(), from.getMonth(), from.getDate() + i), loc);
+    const day = analyzeDay(new Date(from.getFullYear(), from.getMonth(), from.getDate() + i), loc, windows);
     if (!day.sunset) continue;
     const base = {
       date: ymd(day.date),
@@ -68,7 +70,7 @@ export function computeCarEvents(loc: Location, from: Date, days: number): CarEv
 }
 
 /** Recompute when the location changed or the saved data is getting old. Android only. */
-export async function syncCarEvents(loc: Location, force = false): Promise<void> {
+export async function syncCarEvents(loc: Location, windows: EventWindows = DEFAULT_WINDOWS, force = false): Promise<void> {
   if (Capacitor.getPlatform() !== 'android') return;
   try {
     if (!force) {
@@ -76,7 +78,8 @@ export async function syncCarEvents(loc: Location, force = false): Promise<void>
       if (value) {
         const saved = JSON.parse(value) as CarPayload;
         const sameLoc = saved.location.latitude === loc.latitude && saved.location.longitude === loc.longitude
-          && saved.location.label === loc.label;
+          && saved.location.label === loc.label
+          && JSON.stringify(saved.windows ?? DEFAULT_WINDOWS) === JSON.stringify(windows);
         const ageDays = (Date.now() - saved.generatedAt) / 86_400_000;
         const sameMonth = saved.startDate === ymd(monthStart(new Date()));
         if (saved.version === 2 && sameLoc && sameMonth && ageDays < REFRESH_AFTER_DAYS) return;
@@ -91,7 +94,8 @@ export async function syncCarEvents(loc: Location, force = false): Promise<void>
       startDate: ymd(start),
       endDate: ymd(end),
       location: loc,
-      events: computeCarEvents(loc, start, days),
+      windows,
+      events: computeCarEvents(loc, start, days, windows),
     };
     await Preferences.set({ key: CAR_EVENTS_KEY, value: JSON.stringify(payload) });
   } catch (e) {
