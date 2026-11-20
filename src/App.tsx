@@ -1,7 +1,8 @@
 import {
   IonApp, IonButton, IonButtons, IonContent, IonHeader, IonIcon, IonItem, IonLabel, IonList, IonListHeader, IonNote, IonPage,
-  IonTitle, IonToolbar,
+  IonRefresher, IonRefresherContent, IonTitle, IonToolbar,
 } from '@ionic/react';
+import { Capacitor } from '@capacitor/core';
 import { chevronBack, chevronForward, locationOutline } from 'ionicons/icons';
 import { useEffect, useMemo, useState } from 'react';
 import { analyzeMonth, type DayInfo, type Location } from './astro';
@@ -13,6 +14,10 @@ import { LocationModal } from './components/LocationModal';
 import { fmtOffset, fmtPct, fmtTime } from './format';
 
 const STORAGE_KEY = 'sunsetmoonevents.location';
+
+// Ionic locks the page body, which turns off the browser's own pull-down-to-refresh,
+// so the website gets Ionic's version instead. It reloads the page just as the browser would.
+const PULL_TO_REFRESH = !Capacitor.isNativePlatform();
 
 function loadLocation(): Location | null {
   try {
@@ -85,6 +90,11 @@ export default function App() {
         </IonHeader>
 
         <IonContent>
+          {PULL_TO_REFRESH && (
+            <IonRefresher slot="fixed" onIonRefresh={() => window.location.reload()}>
+              <IonRefresherContent />
+            </IonRefresher>
+          )}
           <div className="wrap">
             <div className="month-nav">
               <IonButton fill="clear" onClick={() => shift(-1)} aria-label="Previous month">

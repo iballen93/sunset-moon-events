@@ -193,3 +193,25 @@
   justify-content: center;
   padding: 4px 0 8px;
 }
+
+/* Location page: how to unblock location when the browser or phone has refused it */
+.location-blocked {
+  margin: 8px 0 12px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 1px solid var(--ion-color-warning);
+  background: rgba(var(--ion-color-warning-rgb), 0.1);
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+.location-blocked ol {
+  margin: 8px 0;
+  padding-left: 20px;
+}
+.location-blocked li + li {
+  margin-top: 4px;
+}
+.location-blocked p {
+  margin: 0;
+  color: var(--ion-color-medium);
+}
