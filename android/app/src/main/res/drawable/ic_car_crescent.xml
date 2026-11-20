@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Young crescent setting just after the sun on the western horizon. Mirrors Icons.tsx. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="64dp" android:height="64dp"
+    android:viewportWidth="32" android:viewportHeight="32">
+    <path android:fillColor="#FF9A3C" android:pathData="M4,22 A8,8 0 0,1 20,22 Z" />
+    <path android:strokeColor="#FF9A3C" android:strokeWidth="1.6" android:strokeLineCap="round"
+        android:pathData="M12,12.4 L12,10.4 M5.21,15.21 L3.8,13.8 M18.79,15.21 L20.2,13.8" />
+    <path android:strokeColor="#E0603A" android:strokeWidth="1.6" android:strokeLineCap="round"
+        android:pathData="M1.5,22.5 L30.5,22.5" />
+    <group android:rotation="-25" android:pivotX="24" android:pivotY="9">
+        <path android:fillColor="#F4E9B8" android:strokeColor="#B9A76A" android:strokeWidth="0.6"
+            android:pathData="M27.5,3.5 A6,6 0 1,0 27.5,14.5 A5,5 0 1,1 27.5,3.5 Z" />
+    </group>
+</vector>

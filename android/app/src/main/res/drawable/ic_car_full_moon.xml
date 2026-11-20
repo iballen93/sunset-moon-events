@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Sun setting in the west (left), full moon rising in the east (right). Mirrors Icons.tsx. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="64dp" android:height="64dp"
+    android:viewportWidth="32" android:viewportHeight="32">
+    <path android:fillColor="#FF9A3C" android:pathData="M1.5,22 A6.5,6.5 0 0,1 14.5,22 Z" />
+    <path android:strokeColor="#FF9A3C" android:strokeWidth="1.6" android:strokeLineCap="round"
+        android:pathData="M8,13.9 L8,11.9 M2.27,16.27 L0.86,14.86 M13.73,16.27 L15.14,14.86" />
+    <path android:fillColor="#F4E9B8" android:strokeColor="#B9A76A" android:strokeWidth="0.8"
+        android:pathData="M19.2,16 a5.8,5.8 0 1,0 11.6,0 a5.8,5.8 0 1,0 -11.6,0 Z" />
+    <path android:fillColor="#DDCF95" android:pathData="M22,14.6 a1.2,1.2 0 1,0 2.4,0 a1.2,1.2 0 1,0 -2.4,0 Z" />
+    <path android:fillColor="#DDCF95" android:pathData="M25.4,17.6 a1.4,1.4 0 1,0 2.8,0 a1.4,1.4 0 1,0 -2.8,0 Z" />
+    <path android:strokeColor="#E0603A" android:strokeWidth="1.6" android:strokeLineCap="round"
+        android:pathData="M1.5,22.5 L30.5,22.5" />
+</vector>

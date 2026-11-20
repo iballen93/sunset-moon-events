@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Sunset Moon Events</string>
+    <string name="title_activity_main">Sunset Moon Events</string>
+    <string name="package_name">com.sunsetmoonevents.app</string>
+    <string name="custom_url_scheme">com.sunsetmoonevents.app</string>
+</resources>
