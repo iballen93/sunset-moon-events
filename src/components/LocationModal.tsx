@@ -1,10 +1,12 @@
 import {
-  IonButton, IonButtons, IonContent, IonHeader, IonIcon, IonInput, IonItem, IonList, IonModal, IonSpinner, IonText, IonTitle, IonToolbar,
+  IonButton, IonButtons, IonContent, IonHeader, IonIcon, IonInput, IonItem, IonLabel, IonList, IonModal, IonSearchbar, IonSpinner, IonText,
+  IonTitle, IonToolbar,
 } from '@ionic/react';
 import { Geolocation } from '@capacitor/geolocation';
 import { locate } from 'ionicons/icons';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { Location } from '../astro';
+import { searchPlaces, type PlaceResult } from '../geocode';
 
 interface Props {
   isOpen: boolean;
@@ -23,14 +25,50 @@ export function LocationModal({ isOpen, current, onSave, onClose }: Props) {
   const [lon, setLon] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
+  const [query, setQuery] = useState('');
+  const [results, setResults] = useState<PlaceResult[]>([]);
+  const [searching, setSearching] = useState(false);
+  const [searchMsg, setSearchMsg] = useState('');
+  const searchAbort = useRef<AbortController | null>(null);
 
   useEffect(() => {
     if (isOpen) {
       setLat(current ? current.latitude.toFixed(4) : '');
       setLon(current ? current.longitude.toFixed(4) : '');
       setError('');
+      setQuery('');
+      setResults([]);
+      setSearchMsg('');
     }
   }, [isOpen, current]);
+
+  // Search as the user types (the searchbar debounces), cancelling any request still in flight.
+  useEffect(() => {
+    searchAbort.current?.abort();
+    if (query.trim().length < 2) {
+      setResults([]);
+      setSearchMsg('');
+      setSearching(false);
+      return;
+    }
+    const ctrl = new AbortController();
+    searchAbort.current = ctrl;
+    setSearching(true);
+    searchPlaces(query, ctrl.signal)
+      .then((r) => {
+        setResults(r);
+        setSearchMsg(r.length ? '' : 'No places found. Try a city name or ZIP / postal code.');
+      })
+      .catch((e) => {
+        if (ctrl.signal.aborted) return;
+        setResults([]);
+        setSearchMsg(`Search isn't working right now (${(e as Error).message}). Check your connection.`);
+      })
+      .finally(() => {
+        if (!ctrl.signal.aborted) setSearching(false);
+      });
+    return () => ctrl.abort();
+  }, [query]);
 
   const useGps = async () => {
     setBusy(true);
@@ -65,6 +103,32 @@ export function LocationModal({ isOpen, current, onSave, onClose }: Props) {
         </IonToolbar>
       </IonHeader>
       <IonContent className="ion-padding">
+        <IonSearchbar
+          className="place-search"
+          placeholder="Search city or ZIP code"
+          value={query}
+          debounce={350}
+          inputmode="search"
+          enterkeyhint="search"
+          onIonInput={(e) => setQuery(String(e.detail.value ?? ''))}
+          onIonClear={() => setQuery('')}
+        />
+        {searching && <div className="search-status"><IonSpinner name="dots" /></div>}
+        {!searching && searchMsg && <p className="hint">{searchMsg}</p>}
+        {results.length > 0 && (
+          <IonList inset>
+            {results.map((r) => (
+              <IonItem key={`${r.latitude},${r.longitude}`} button detail={false}
+                onClick={() => onSave({ latitude: r.latitude, longitude: r.longitude, label: r.label })}>
+                <IonLabel>
+                  <h2>{r.label}</h2>
+                  {r.detail && <p>{r.detail}</p>}
+                </IonLabel>
+              </IonItem>
+            ))}
+          </IonList>
+        )}
+
         <IonButton expand="block" onClick={useGps} disabled={busy}>
           {busy ? <IonSpinner name="dots" /> : <><IonIcon slot="start" icon={locate} />Use my current location</>}
         </IonButton>

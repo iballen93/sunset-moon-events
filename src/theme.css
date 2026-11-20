@@ -183,3 +183,13 @@
   text-align: center;
   padding: 48px 16px;
 }
+
+/* Location page: city / ZIP search at the top */
+.place-search {
+  padding: 0 0 8px;
+}
+.search-status {
+  display: flex;
+  justify-content: center;
+  padding: 4px 0 8px;
+}
