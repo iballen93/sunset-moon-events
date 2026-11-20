@@ -215,3 +215,8 @@
   margin: 0;
   color: var(--ion-color-medium);
 }
+
+/* Calendar hidden while the location page reopens after a refresh (see App.tsx `restoring`) */
+.hide-until-ready {
+  visibility: hidden;
+}

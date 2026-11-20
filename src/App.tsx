@@ -42,6 +42,9 @@ export default function App() {
   const [location, setLocation] = useState<Location | null>(loadLocation);
   // The location page is marked in the address (#location), so a refresh reopens it.
   const [locOpen, setLocOpen] = useState(() => window.location.hash === LOCATION_HASH);
+  // While reopening the location page after a refresh, keep the calendar hidden and skip the
+  // slide-in, so the calendar doesn't flash up first.
+  const [restoring, setRestoring] = useState(() => window.location.hash === LOCATION_HASH);
   const [selected, setSelected] = useState<DayInfo | null>(null);
 
   // First launch: open the location page. Location permission is only requested
@@ -100,7 +103,7 @@ export default function App() {
   return (
     <IonApp>
       <IonPage>
-        <IonHeader>
+        <IonHeader className={restoring ? 'hide-until-ready' : undefined}>
           <IonToolbar>
             <IonTitle>Sunset Moon Events</IonTitle>
             <IonButtons slot="end">
@@ -111,7 +114,7 @@ export default function App() {
           </IonToolbar>
         </IonHeader>
 
-        <IonContent>
+        <IonContent className={restoring ? 'hide-until-ready' : undefined}>
           <PullToRefresh />
           <div className="wrap">
             <div className="month-nav">
@@ -188,7 +191,8 @@ export default function App() {
         </IonContent>
 
         <DayDetail day={selected} onClose={() => setSelected(null)} />
-        <LocationModal isOpen={locOpen} current={location} onSave={updateLocation} onClose={() => setLocOpen(false)} />
+        <LocationModal isOpen={locOpen} current={location} onSave={updateLocation} onClose={() => setLocOpen(false)}
+          animated={!restoring} onDidPresent={() => setRestoring(false)} />
       </IonPage>
     </IonApp>
   );

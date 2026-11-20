@@ -26,6 +26,9 @@ interface Props {
   current: Location | null;
   onSave: (loc: Location) => void;
   onClose: () => void;
+  /** False to appear without sliding in (reopening the page after a refresh). */
+  animated?: boolean;
+  onDidPresent?: () => void;
 }
 
 export async function getDeviceLocation(): Promise<Location> {
@@ -34,7 +37,7 @@ export async function getDeviceLocation(): Promise<Location> {
   return { latitude, longitude, label: gpsLabel(await placeNameFor(latitude, longitude)) };
 }
 
-export function LocationModal({ isOpen, current, onSave, onClose }: Props) {
+export function LocationModal({ isOpen, current, onSave, onClose, animated = true, onDidPresent }: Props) {
   const [lat, setLat] = useState('');
   const [lon, setLon] = useState('');
   const [busy, setBusy] = useState(false);
@@ -142,7 +145,7 @@ export function LocationModal({ isOpen, current, onSave, onClose }: Props) {
   };
 
   return (
-    <IonModal isOpen={isOpen} onDidDismiss={onClose}>
+    <IonModal isOpen={isOpen} onDidDismiss={onClose} animated={animated} onDidPresent={onDidPresent}>
       <IonHeader>
         <IonToolbar>
           <IonTitle>Location</IonTitle>
