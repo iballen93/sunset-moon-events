@@ -31,8 +31,10 @@ jobs:
           node-version: 24
           cache: npm
 
+      # npm install, not npm ci: a lock file made on Windows leaves out the Linux-only optional packages
+      # of the bundler (such as @emnapi/core), and npm ci refuses to fill them in
       - name: Install dependencies
-        run: npm ci
+        run: npm install --no-audit --no-fund
 
       - name: Run tests
         run: npm test
