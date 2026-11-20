@@ -132,17 +132,6 @@
   gap: 4px;
 }
 
-.list-note {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 4px;
-  font-size: 1rem;
-  font-weight: 600;
-  color: var(--ion-text-color);
-  font-variant-numeric: tabular-nums;
-}
-
 .detail-date {
   text-align: center;
   font-weight: 600;

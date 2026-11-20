@@ -1,6 +1,5 @@
 import {
-  IonApp, IonButton, IonButtons, IonContent, IonHeader, IonIcon, IonItem, IonLabel, IonList, IonListHeader, IonNote, IonPage,
-  IonTitle, IonToolbar,
+  IonApp, IonButton, IonButtons, IonContent, IonHeader, IonIcon, IonPage, IonTitle, IonToolbar,
 } from '@ionic/react';
 import { chevronBack, chevronForward, locationOutline } from 'ionicons/icons';
 import { useEffect, useMemo, useState } from 'react';
@@ -12,7 +11,6 @@ import { DayDetail } from './components/DayDetail';
 import { SunsetCrescentIcon, SunsetFullMoonIcon } from './components/Icons';
 import { LocationModal } from './components/LocationModal';
 import { PullToRefresh } from './PullToRefresh';
-import { fmtOffset, fmtPct, fmtTime } from './format';
 
 const STORAGE_KEY = 'sunsetmoonevents.location';
 const LOCATION_HASH = '#location';
@@ -90,7 +88,6 @@ export default function App() {
   }, [location]);
 
   const days = useMemo(() => (location ? analyzeMonth(year, month, location) : []), [year, month, location]);
-  const events = days.filter((d) => d.fullMoonEvent || d.newMoonEvent);
 
   const shift = (delta: number) => {
     const d = new Date(year, month + delta, 1);
@@ -138,48 +135,6 @@ export default function App() {
                   <span><SunsetFullMoonIcon size={22} /> Moonrise within ±1h of sunset</span>
                   <span><SunsetCrescentIcon size={22} /> Moonset 30m–2.5h after sunset</span>
                 </div>
-
-                <IonList inset>
-                  <IonListHeader>Best days this month</IonListHeader>
-                  {events.length === 0 && (
-                    <IonItem><IonLabel color="medium">No qualifying days this month.</IonLabel></IonItem>
-                  )}
-                  {events.flatMap((d) => {
-                    const rows = [];
-                    const dateStr = d.date.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
-                    if (d.fullMoonEvent) {
-                      rows.push(
-                        <IonItem key={`f${d.date.getDate()}`} button detail onClick={() => setSelected(d)}>
-                          <span slot="start"><SunsetFullMoonIcon size={30} /></span>
-                          <IonLabel>
-                            <h3>{dateStr}</h3>
-                            <p>Sunset {fmtTime(d.sunset)} · Moonrise {fmtTime(d.fullMoonEvent.moonrise)}</p>
-                          </IonLabel>
-                          <IonNote slot="end" className="list-note">
-                            <span>{fmtOffset(d.fullMoonEvent.offsetMin)}</span>
-                            <span>{fmtPct(d.illumination)} lit</span>
-                          </IonNote>
-                        </IonItem>,
-                      );
-                    }
-                    if (d.newMoonEvent) {
-                      rows.push(
-                        <IonItem key={`n${d.date.getDate()}`} button detail onClick={() => setSelected(d)}>
-                          <span slot="start"><SunsetCrescentIcon size={30} /></span>
-                          <IonLabel>
-                            <h3>{dateStr}</h3>
-                            <p>Sunset {fmtTime(d.sunset)} · Moonset {fmtTime(d.newMoonEvent.moonset)}</p>
-                          </IonLabel>
-                          <IonNote slot="end" className="list-note">
-                            <span>{fmtOffset(d.newMoonEvent.offsetMin)}</span>
-                            <span>{fmtPct(d.newMoonEvent.illumination)} lit</span>
-                          </IonNote>
-                        </IonItem>,
-                      );
-                    }
-                    return rows;
-                  })}
-                </IonList>
               </>
             ) : (
               <div className="empty-state">
