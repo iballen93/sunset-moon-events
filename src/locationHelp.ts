@@ -74,10 +74,11 @@ export function blockedLocationHelp(platform: string, userAgent: string): Blocke
   if (/Android/.test(ua)) {
     return {
       title: 'Location is blocked for this site',
+      // Chrome 157 on Android: the page-info icon is gone from the address bar; it lives in the ⋮ menu.
       steps: [
-        'Tap the icon at the left of the address bar (next to the web address).',
-        'Tap Permissions → Location and switch it on (or tap “Reset permissions”).',
-        'Location will be picked up automatically once it’s allowed, or tap “Use my current location” again.',
+        'Tap Chrome’s ⋮ menu (top right) → Site controls.',
+        'Tap Permissions, then turn on the Location switch.',
+        'Close that panel. Your location will be picked up automatically, or tap “Use my current location” again.',
       ],
     };
   }

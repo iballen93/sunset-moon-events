@@ -18,10 +18,10 @@ describe('isPermissionDenied', () => {
 });
 
 describe('blockedLocationHelp', () => {
-  it('points Chrome on Android to the icon beside the address', () => {
+  it('points Chrome on Android to Site controls in the ⋮ menu', () => {
     const h = blockedLocationHelp('web', CHROME_ANDROID);
     expect(h.title).toMatch(/blocked for this site/);
-    expect(h.steps.join(' ')).toMatch(/Permissions → Location/);
+    expect(h.steps.join(' ')).toMatch(/⋮ menu.*Site controls.*Permissions.*Location switch/);
   });
   it('has separate steps for Samsung Internet, iPhone Safari and desktop browsers', () => {
     expect(blockedLocationHelp('web', SAMSUNG).steps.join(' ')).toMatch(/Site permissions/);
