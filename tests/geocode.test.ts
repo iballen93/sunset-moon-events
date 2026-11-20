@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { searchPlaces, toPlaceResult } from '../src/geocode';
+import { placeNameFor, reverseLabel, searchPlaces, toPlaceResult } from '../src/geocode';
 
 afterEach(() => vi.unstubAllGlobals());
 
@@ -38,5 +38,26 @@ describe('searchPlaces', () => {
   it('reports a failed request', async () => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: false, status: 503 }));
     await expect(searchPlaces('90210')).rejects.toThrow('503');
+  });
+});
+
+describe('reverseLabel', () => {
+  it('names a US place by city and state', () => {
+    expect(reverseLabel({ city: 'Montrose', locality: 'Montrose', principalSubdivision: 'Colorado', countryName: 'United States of America' }))
+      .toBe('Montrose, Colorado');
+  });
+  it('uses the country when the state would repeat the city', () => {
+    expect(reverseLabel({ city: 'Paris', locality: 'Saint-Merri', principalSubdivision: 'Paris', countryName: 'France' })).toBe('Paris, France');
+  });
+  it('falls back to the locality, and to nothing when nothing is known', () => {
+    expect(reverseLabel({ city: '', locality: 'Ouray', principalSubdivision: 'Colorado' })).toBe('Ouray, Colorado');
+    expect(reverseLabel({})).toBeNull();
+  });
+});
+
+describe('placeNameFor', () => {
+  it('returns null instead of failing when the lookup is unavailable', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('offline')));
+    expect(await placeNameFor(38.45, -107.86)).toBeNull();
   });
 });

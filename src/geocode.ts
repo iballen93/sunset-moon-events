@@ -39,3 +39,39 @@ export async function searchPlaces(query: string, signal?: AbortSignal): Promise
   const data = (await res.json()) as { results?: ApiPlace[] };
   return (data.results ?? []).map(toPlaceResult);
 }
+
+/**
+ * Reverse lookup (coordinates → "City, State") for a location from the device's GPS,
+ * using BigDataCloud's free client-side endpoint (no key needed, allows browser requests).
+ */
+const REVERSE_ENDPOINT = 'https://api.bigdatacloud.net/data/reverse-geocode-client';
+
+/** The label shown for a GPS location before (or if) its place name is known. */
+export const GPS_LABEL = 'Current location';
+
+interface ReverseResult {
+  city?: string;
+  locality?: string;
+  principalSubdivision?: string;
+  countryName?: string;
+}
+
+/** "Montrose, Colorado"; outside a state/province, or where it repeats the city, "Paris, France". */
+export function reverseLabel(r: ReverseResult): string | null {
+  const city = r.city || r.locality;
+  const region = r.principalSubdivision && r.principalSubdivision !== city ? r.principalSubdivision : r.countryName;
+  if (city && region) return `${city}, ${region}`;
+  return city || region || null;
+}
+
+/** The place name for a coordinate, or null if it can't be looked up (offline, slow, nothing nearby). */
+export async function placeNameFor(latitude: number, longitude: number, timeoutMs = 6000): Promise<string | null> {
+  try {
+    const url = `${REVERSE_ENDPOINT}?latitude=${latitude}&longitude=${longitude}&localityLanguage=en`;
+    const res = await fetch(url, { signal: AbortSignal.timeout(timeoutMs) });
+    if (!res.ok) return null;
+    return reverseLabel((await res.json()) as ReverseResult);
+  } catch {
+    return null;
+  }
+}

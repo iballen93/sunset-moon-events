@@ -7,7 +7,7 @@ import { Geolocation } from '@capacitor/geolocation';
 import { locate } from 'ionicons/icons';
 import { useEffect, useRef, useState } from 'react';
 import type { Location } from '../astro';
-import { searchPlaces, type PlaceResult } from '../geocode';
+import { GPS_LABEL, placeNameFor, searchPlaces, type PlaceResult } from '../geocode';
 import { blockedLocationHelp, isPermissionDenied, type BlockedHelp } from '../locationHelp';
 
 /** The browser's own record of this site's location permission (web only; null if unsupported). */
@@ -29,7 +29,8 @@ interface Props {
 
 export async function getDeviceLocation(): Promise<Location> {
   const pos = await Geolocation.getCurrentPosition({ enableHighAccuracy: false, timeout: 15000 });
-  return { latitude: pos.coords.latitude, longitude: pos.coords.longitude, label: 'Current location' };
+  const { latitude, longitude } = pos.coords;
+  return { latitude, longitude, label: (await placeNameFor(latitude, longitude)) ?? GPS_LABEL };
 }
 
 export function LocationModal({ isOpen, current, onSave, onClose }: Props) {

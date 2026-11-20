@@ -7,6 +7,7 @@ import { chevronBack, chevronForward, locationOutline } from 'ionicons/icons';
 import { useEffect, useMemo, useState } from 'react';
 import { analyzeMonth, type DayInfo, type Location } from './astro';
 import { syncCarEvents } from './carExport';
+import { GPS_LABEL, placeNameFor } from './geocode';
 import { Calendar } from './components/Calendar';
 import { DayDetail } from './components/DayDetail';
 import { SunsetCrescentIcon, SunsetFullMoonIcon } from './components/Icons';
@@ -56,6 +57,20 @@ export default function App() {
     saveLocation(loc);
     setLocOpen(false);
   }
+
+  // A GPS location saved without its place name (older versions, or the lookup failed while
+  // offline) shows "Current location"; look up its city and state and save that instead.
+  useEffect(() => {
+    if (location?.label !== GPS_LABEL) return;
+    let cancelled = false;
+    void placeNameFor(location.latitude, location.longitude).then((label) => {
+      if (cancelled || !label) return;
+      const named = { ...location, label };
+      setLocation(named);
+      saveLocation(named);
+    });
+    return () => { cancelled = true; };
+  }, [location]);
 
   // Keep the Android Auto screen's data current (runs after first paint; no-op off Android).
   useEffect(() => {
