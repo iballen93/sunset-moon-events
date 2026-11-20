@@ -9,7 +9,7 @@ import { syncCarEvents } from './carExport';
 import { Calendar } from './components/Calendar';
 import { DayDetail } from './components/DayDetail';
 import { SunsetCrescentIcon, SunsetFullMoonIcon } from './components/Icons';
-import { getDeviceLocation, LocationModal } from './components/LocationModal';
+import { LocationModal } from './components/LocationModal';
 import { fmtOffset, fmtPct, fmtTime } from './format';
 
 const STORAGE_KEY = 'sunsetmoonevents.location';
@@ -39,12 +39,10 @@ export default function App() {
   const [locOpen, setLocOpen] = useState(false);
   const [selected, setSelected] = useState<DayInfo | null>(null);
 
-  // First launch: try GPS, otherwise ask for coordinates.
+  // First launch: open the location page. Location permission is only requested
+  // when the user taps "Use my current location" there.
   useEffect(() => {
-    if (location) return;
-    getDeviceLocation()
-      .then(updateLocation)
-      .catch(() => setLocOpen(true));
+    if (!location) setLocOpen(true);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
