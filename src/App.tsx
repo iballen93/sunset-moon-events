@@ -15,6 +15,7 @@ import { PullToRefresh } from './PullToRefresh';
 import { fmtOffset, fmtPct, fmtTime } from './format';
 
 const STORAGE_KEY = 'sunsetmoonevents.location';
+const LOCATION_HASH = '#location';
 
 
 function loadLocation(): Location | null {
@@ -39,7 +40,8 @@ export default function App() {
   const [year, setYear] = useState(now.getFullYear());
   const [month, setMonth] = useState(now.getMonth());
   const [location, setLocation] = useState<Location | null>(loadLocation);
-  const [locOpen, setLocOpen] = useState(false);
+  // The location page is marked in the address (#location), so a refresh reopens it.
+  const [locOpen, setLocOpen] = useState(() => window.location.hash === LOCATION_HASH);
   const [selected, setSelected] = useState<DayInfo | null>(null);
 
   // First launch: open the location page. Location permission is only requested
@@ -48,6 +50,14 @@ export default function App() {
     if (!location) setLocOpen(true);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Keep #location in the address while the location page is open (replacing, not adding,
+  // a history entry, so Back still behaves as before).
+  useEffect(() => {
+    if ((window.location.hash === LOCATION_HASH) === locOpen) return;
+    const { pathname, search } = window.location;
+    window.history.replaceState(window.history.state, '', locOpen ? LOCATION_HASH : pathname + search);
+  }, [locOpen]);
 
   function updateLocation(loc: Location) {
     setLocation(loc);
