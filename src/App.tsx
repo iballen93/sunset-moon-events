@@ -1,24 +1,21 @@
 import {
   IonApp, IonButton, IonButtons, IonContent, IonHeader, IonIcon, IonItem, IonLabel, IonList, IonListHeader, IonNote, IonPage,
-  IonRefresher, IonRefresherContent, IonTitle, IonToolbar,
+  IonTitle, IonToolbar,
 } from '@ionic/react';
-import { Capacitor } from '@capacitor/core';
 import { chevronBack, chevronForward, locationOutline } from 'ionicons/icons';
 import { useEffect, useMemo, useState } from 'react';
 import { analyzeMonth, type DayInfo, type Location } from './astro';
 import { syncCarEvents } from './carExport';
-import { GPS_LABEL, placeNameFor } from './geocode';
+import { upgradedGpsLabel } from './geocode';
 import { Calendar } from './components/Calendar';
 import { DayDetail } from './components/DayDetail';
 import { SunsetCrescentIcon, SunsetFullMoonIcon } from './components/Icons';
 import { LocationModal } from './components/LocationModal';
+import { PullToRefresh } from './PullToRefresh';
 import { fmtOffset, fmtPct, fmtTime } from './format';
 
 const STORAGE_KEY = 'sunsetmoonevents.location';
 
-// Ionic locks the page body, which turns off the browser's own pull-down-to-refresh,
-// so the website gets Ionic's version instead. It reloads the page just as the browser would.
-const PULL_TO_REFRESH = !Capacitor.isNativePlatform();
 
 function loadLocation(): Location | null {
   try {
@@ -59,11 +56,11 @@ export default function App() {
   }
 
   // A GPS location saved without its place name (older versions, or the lookup failed while
-  // offline) shows "Current location"; look up its city and state and save that instead.
+  // offline) gets "Current location · City, State" looked up and saved.
   useEffect(() => {
-    if (location?.label !== GPS_LABEL) return;
+    if (!location) return;
     let cancelled = false;
-    void placeNameFor(location.latitude, location.longitude).then((label) => {
+    void upgradedGpsLabel(location).then((label) => {
       if (cancelled || !label) return;
       const named = { ...location, label };
       setLocation(named);
@@ -105,11 +102,7 @@ export default function App() {
         </IonHeader>
 
         <IonContent>
-          {PULL_TO_REFRESH && (
-            <IonRefresher slot="fixed" onIonRefresh={() => window.location.reload()}>
-              <IonRefresherContent />
-            </IonRefresher>
-          )}
+          <PullToRefresh />
           <div className="wrap">
             <div className="month-nav">
               <IonButton fill="clear" onClick={() => shift(-1)} aria-label="Previous month">

@@ -75,7 +75,8 @@ export async function syncCarEvents(loc: Location, force = false): Promise<void>
       const { value } = await Preferences.get({ key: CAR_EVENTS_KEY });
       if (value) {
         const saved = JSON.parse(value) as CarPayload;
-        const sameLoc = saved.location.latitude === loc.latitude && saved.location.longitude === loc.longitude;
+        const sameLoc = saved.location.latitude === loc.latitude && saved.location.longitude === loc.longitude
+          && saved.location.label === loc.label;
         const ageDays = (Date.now() - saved.generatedAt) / 86_400_000;
         const sameMonth = saved.startDate === ymd(monthStart(new Date()));
         if (saved.version === 2 && sameLoc && sameMonth && ageDays < REFRESH_AFTER_DAYS) return;

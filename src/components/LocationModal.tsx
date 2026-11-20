@@ -7,7 +7,8 @@ import { Geolocation } from '@capacitor/geolocation';
 import { locate } from 'ionicons/icons';
 import { useEffect, useRef, useState } from 'react';
 import type { Location } from '../astro';
-import { GPS_LABEL, placeNameFor, searchPlaces, type PlaceResult } from '../geocode';
+import { gpsLabel, placeNameFor, searchPlaces, type PlaceResult } from '../geocode';
+import { PullToRefresh } from '../PullToRefresh';
 import { blockedLocationHelp, isPermissionDenied, type BlockedHelp } from '../locationHelp';
 
 /** The browser's own record of this site's location permission (web only; null if unsupported). */
@@ -30,7 +31,7 @@ interface Props {
 export async function getDeviceLocation(): Promise<Location> {
   const pos = await Geolocation.getCurrentPosition({ enableHighAccuracy: false, timeout: 15000 });
   const { latitude, longitude } = pos.coords;
-  return { latitude, longitude, label: (await placeNameFor(latitude, longitude)) ?? GPS_LABEL };
+  return { latitude, longitude, label: gpsLabel(await placeNameFor(latitude, longitude)) };
 }
 
 export function LocationModal({ isOpen, current, onSave, onClose }: Props) {
@@ -151,6 +152,7 @@ export function LocationModal({ isOpen, current, onSave, onClose }: Props) {
         </IonToolbar>
       </IonHeader>
       <IonContent className="ion-padding">
+        <PullToRefresh />
         <IonSearchbar
           className="place-search"
           placeholder="Search city or ZIP code"

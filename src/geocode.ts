@@ -49,6 +49,30 @@ const REVERSE_ENDPOINT = 'https://api.bigdatacloud.net/data/reverse-geocode-clie
 /** The label shown for a GPS location before (or if) its place name is known. */
 export const GPS_LABEL = 'Current location';
 
+/** "Current location · Montrose, Colorado", so it's clear the place came from the device. */
+export function gpsLabel(placeName: string | null): string {
+  return placeName ? `${GPS_LABEL} · ${placeName}` : GPS_LABEL;
+}
+
+/**
+ * The label to show for a saved location, or null if it's already right. A GPS location saved
+ * without its place name gets one looked up; one saved by the version that dropped
+ * "Current location" (a bare "City, State" with full-precision GPS coordinates; search results
+ * have at most 5 decimals and typed coordinates are labelled "38.45, -107.86") gets it back.
+ */
+export async function upgradedGpsLabel(loc: { latitude: number; longitude: number; label?: string }): Promise<string | null> {
+  const label = loc.label ?? '';
+  if (label === GPS_LABEL) {
+    const name = await placeNameFor(loc.latitude, loc.longitude);
+    return name ? gpsLabel(name) : null;
+  }
+  const decimals = (n: number) => (String(n).split('.')[1] ?? '').length;
+  const fromGps = decimals(loc.latitude) > 6 || decimals(loc.longitude) > 6;
+  const typedCoords = /^-?\d+(\.\d+)?, -?\d+(\.\d+)?$/.test(label);
+  if (fromGps && label && !label.startsWith(GPS_LABEL) && !typedCoords) return gpsLabel(label);
+  return null;
+}
+
 interface ReverseResult {
   city?: string;
   locality?: string;

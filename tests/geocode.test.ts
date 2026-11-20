@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { placeNameFor, reverseLabel, searchPlaces, toPlaceResult } from '../src/geocode';
+import { gpsLabel, placeNameFor, reverseLabel, searchPlaces, toPlaceResult, upgradedGpsLabel } from '../src/geocode';
 
 afterEach(() => vi.unstubAllGlobals());
 
@@ -59,5 +59,32 @@ describe('placeNameFor', () => {
   it('returns null instead of failing when the lookup is unavailable', async () => {
     vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('offline')));
     expect(await placeNameFor(38.45, -107.86)).toBeNull();
+  });
+});
+
+describe('GPS location labels', () => {
+  it('keeps "Current location" and adds the place name', () => {
+    expect(gpsLabel('Montrose, Colorado')).toBe('Current location · Montrose, Colorado');
+    expect(gpsLabel(null)).toBe('Current location');
+  });
+
+  it('puts "Current location" back on a GPS location saved as a bare city and state', async () => {
+    expect(await upgradedGpsLabel({ latitude: 38.45045045045045, longitude: -107.85785168349221, label: 'Montrose, Colorado' }))
+      .toBe('Current location · Montrose, Colorado');
+  });
+
+  it('looks up the place for a GPS location saved without one', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
+      ok: true, json: async () => ({ city: 'Montrose', principalSubdivision: 'Colorado' }),
+    }));
+    expect(await upgradedGpsLabel({ latitude: 38.4505, longitude: -107.8579, label: 'Current location' }))
+      .toBe('Current location · Montrose, Colorado');
+  });
+
+  it('leaves searched, typed and already-labelled locations alone', async () => {
+    expect(await upgradedGpsLabel({ latitude: 34.07362, longitude: -118.40036, label: 'Beverly Hills, California' })).toBeNull();
+    expect(await upgradedGpsLabel({ latitude: 38.450450450, longitude: -107.857851683, label: '38.45, -107.86' })).toBeNull();
+    expect(await upgradedGpsLabel({ latitude: 38.45045045045045, longitude: -107.85785168349221, label: 'Current location · Montrose, Colorado' }))
+      .toBeNull();
   });
 });
