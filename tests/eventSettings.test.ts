@@ -71,3 +71,29 @@ describe('windows applied to the calendar', () => {
     expect(narrow.crescent).toBeLessThan(def.crescent);
   });
 });
+
+describe('Show all events (moonrise and moonset nearest sunset)', () => {
+  it('fills in every day, within 12 h of sunset, only when asked', () => {
+    const plain = analyzeMonth(2026, 10, NYC);
+    expect(plain.every((d) => d.nearSunset === undefined)).toBe(true);
+
+    const all = analyzeMonth(2026, 10, NYC, DEFAULT_WINDOWS, { nearSunset: true });
+    expect(all).toHaveLength(30);
+    for (const d of all) {
+      expect(d.nearSunset).toBeDefined();
+      for (const m of [d.nearSunset!.moonriseMin, d.nearSunset!.moonsetMin]) {
+        if (m !== null) expect(Math.abs(m)).toBeLessThanOrEqual(12 * 60);
+      }
+    }
+    // Nearly every day has both; the moon's ~24 h 50 m cycle leaves at most a day or two without one.
+    expect(all.filter((d) => d.nearSunset!.moonriseMin !== null).length).toBeGreaterThanOrEqual(28);
+    expect(all.filter((d) => d.nearSunset!.moonsetMin !== null).length).toBeGreaterThanOrEqual(28);
+  });
+
+  it('agrees with the event days: the full-moon and crescent offsets match', () => {
+    for (const d of analyzeMonth(2026, 10, NYC, DEFAULT_WINDOWS, { nearSunset: true })) {
+      if (d.fullMoonEvent) expect(d.nearSunset!.moonriseMin).toBeCloseTo(d.fullMoonEvent.offsetMin, 1);
+      if (d.newMoonEvent) expect(d.nearSunset!.moonsetMin).toBeCloseTo(d.newMoonEvent.offsetMin, 1);
+    }
+  });
+});

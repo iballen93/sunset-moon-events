@@ -2,7 +2,6 @@ import { Body, Illumination, MoonPhase, Observer, SearchRiseSet } from 'astronom
 
 const MIN = 60_000;
 
-/** Event windows, in minutes relative to sunset. */
 /** Minutes relative to sunset (negative = before). */
 export interface TimeWindow {
   start: number;
@@ -46,6 +45,11 @@ export interface DayInfo {
   fullMoonEvent: { moonrise: Date; offsetMin: number } | null;
   /** Set when moonset falls 30–150 min after sunset. */
   newMoonEvent: { moonset: Date; offsetMin: number; illumination: number } | null;
+  /**
+   * The moonrise and moonset nearest this day's sunset (within 12 h either side), in minutes from
+   * sunset, whatever the phase. Only filled in when asked for ("Show all events").
+   */
+  nearSunset?: { moonriseMin: number | null; moonsetMin: number | null };
 }
 
 const toDate = (t: { date: Date } | null) => (t ? t.date : null);
@@ -72,7 +76,14 @@ export function phaseName(angle: number): string {
   return 'Waning Crescent';
 }
 
-export function analyzeDay(date: Date, loc: Location, windows: EventWindows = DEFAULT_WINDOWS): DayInfo {
+export interface AnalyzeOptions {
+  /** Also find the moonrise and moonset nearest sunset for every day (DayInfo.nearSunset). */
+  nearSunset?: boolean;
+}
+
+export function analyzeDay(
+  date: Date, loc: Location, windows: EventWindows = DEFAULT_WINDOWS, opts: AnalyzeOptions = {},
+): DayInfo {
   const obs = new Observer(loc.latitude, loc.longitude, 0);
   const start = new Date(date.getFullYear(), date.getMonth(), date.getDate());
   const end = new Date(date.getFullYear(), date.getMonth(), date.getDate() + 1);
@@ -120,16 +131,31 @@ export function analyzeDay(date: Date, loc: Location, windows: EventWindows = DE
   // Likewise a moonrise near sunset implies a moon near opposition (full). Guard on phase.
   if (fullMoonEvent && (phaseAngle < 135 || phaseAngle > 225)) fullMoonEvent = null;
 
+  let nearSunset: DayInfo['nearSunset'];
+  if (opts.nearSunset) {
+    // The moon rises and sets about once every 24 h 50 m, so a 24 h span centred on sunset holds
+    // at most one of each (rarely none, at high latitudes).
+    const offset = (t: Date | null) => (t && sunset ? (t.getTime() - sunset.getTime()) / MIN : null);
+    const from = sunset ? addMinutes(sunset, -12 * 60) : null;
+    const to = sunset ? addMinutes(sunset, 12 * 60) : null;
+    nearSunset = {
+      moonriseMin: from && to ? offset(findBetween(Body.Moon, obs, 1, from, to)) : null,
+      moonsetMin: from && to ? offset(findBetween(Body.Moon, obs, -1, from, to)) : null,
+    };
+  }
+
   return {
     date: start, sunrise, sunset, moonrise, moonset,
     illumination, phaseAngle, phaseName: phaseName(phaseAngle),
-    fullMoonEvent, newMoonEvent,
+    fullMoonEvent, newMoonEvent, nearSunset,
   };
 }
 
-export function analyzeMonth(year: number, month: number, loc: Location, windows: EventWindows = DEFAULT_WINDOWS): DayInfo[] {
+export function analyzeMonth(
+  year: number, month: number, loc: Location, windows: EventWindows = DEFAULT_WINDOWS, opts: AnalyzeOptions = {},
+): DayInfo[] {
   const days = new Date(year, month + 1, 0).getDate();
   const out: DayInfo[] = [];
-  for (let d = 1; d <= days; d++) out.push(analyzeDay(new Date(year, month, d), loc, windows));
+  for (let d = 1; d <= days; d++) out.push(analyzeDay(new Date(year, month, d), loc, windows, opts));
   return out;
 }

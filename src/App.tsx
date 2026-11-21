@@ -9,7 +9,7 @@ import { upgradedGpsLabel } from './geocode';
 import { Calendar } from './components/Calendar';
 import { DayDetail } from './components/DayDetail';
 import { EventFilters } from './components/EventFilters';
-import { loadWindows, saveWindows } from './eventSettings';
+import { loadShowAll, loadWindows, saveShowAll, saveWindows } from './eventSettings';
 import { LocationModal } from './components/LocationModal';
 import { PullToRefresh } from './PullToRefresh';
 
@@ -46,6 +46,12 @@ export default function App() {
   const [restoring, setRestoring] = useState(() => window.location.hash === LOCATION_HASH);
   const [selected, setSelected] = useState<DayInfo | null>(null);
   const [windows, setWindows] = useState<EventWindows>(loadWindows);
+  const [showAll, setShowAll] = useState(loadShowAll);
+
+  function updateShowAll(on: boolean) {
+    setShowAll(on);
+    saveShowAll(on);
+  }
 
   function updateWindows(w: EventWindows) {
     setWindows(w);
@@ -94,7 +100,9 @@ export default function App() {
     return () => clearTimeout(t);
   }, [location, windows]);
 
-  const days = useMemo(() => (location ? analyzeMonth(year, month, location, windows) : []), [year, month, location, windows]);
+  const days = useMemo(() => (location ? analyzeMonth(year, month, location, windows, { nearSunset: showAll }) : []),
+    [year, month, location, windows, showAll],
+  );
 
   const shift = (delta: number) => {
     const d = new Date(year, month + delta, 1);
@@ -136,9 +144,9 @@ export default function App() {
             {location ? (
               <>
                 <p className="loc-label">{location.label ?? `${location.latitude.toFixed(2)}, ${location.longitude.toFixed(2)}`}</p>
-                <Calendar year={year} month={month} days={days} onSelect={setSelected} />
+                <Calendar year={year} month={month} days={days} onSelect={setSelected} showAll={showAll} />
 
-                <EventFilters windows={windows} onChange={updateWindows} />
+                <EventFilters windows={windows} onChange={updateWindows} showAll={showAll} onShowAll={updateShowAll} />
               </>
             ) : (
               <div className="empty-state">

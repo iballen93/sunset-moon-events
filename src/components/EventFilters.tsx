@@ -8,6 +8,9 @@ import { SunsetCrescentIcon, SunsetFullMoonIcon } from './Icons';
 interface Props {
   windows: EventWindows;
   onChange: (w: EventWindows) => void;
+  /** Every day shows its moonrise and moonset, and the sliders are off. */
+  showAll: boolean;
+  onShowAll: (on: boolean) => void;
 }
 
 type Kind = keyof EventWindows;
@@ -22,7 +25,7 @@ const fmtPin = (v: number) => (v === 0 ? 'sunset' : fmtOffsetShort(v));
  * the moonrise / moonset must be. The description follows the handles while dragging; the
  * calendar updates when a handle is let go.
  */
-export function EventFilters({ windows, onChange }: Props) {
+export function EventFilters({ windows, onChange, showAll, onShowAll }: Props) {
   const [draft, setDraft] = useState(windows);
   useEffect(() => setDraft(windows), [windows]);
 
@@ -43,6 +46,7 @@ export function EventFilters({ windows, onChange }: Props) {
         <IonRange
           aria-label={`${what} window`}
           dualKnobs
+          disabled={showAll}
           min={max.start}
           max={max.end}
           step={STEP_MIN}
@@ -71,14 +75,14 @@ export function EventFilters({ windows, onChange }: Props) {
     <div className="event-filters">
       {row('full', <SunsetFullMoonIcon size={22} />, 'Moonrise')}
       {row('crescent', <SunsetCrescentIcon size={22} />, 'Moonset')}
+      {showAll && <p className="event-filter-note">Showing every day’s moonrise and moonset. The sliders are off.</p>}
       <div className="event-filter-buttons">
-        <IonButton size="small" fill="outline" disabled={sameWindows(windows, DEFAULT_WINDOWS)}
-          onClick={() => onChange(DEFAULT_WINDOWS)}>
+        <IonButton size="small" fill="outline" disabled={!showAll && sameWindows(windows, DEFAULT_WINDOWS)}
+          onClick={() => { onShowAll(false); onChange(DEFAULT_WINDOWS); }}>
           Reset to default
         </IonButton>
-        <IonButton size="small" fill="outline" disabled={sameWindows(windows, MAX_WINDOWS)}
-          onClick={() => onChange(MAX_WINDOWS)}>
-          Show all events
+        <IonButton size="small" fill={showAll ? 'solid' : 'outline'} aria-pressed={showAll} onClick={() => onShowAll(!showAll)}>
+          {showAll ? 'Show matching events only' : 'Show all events'}
         </IonButton>
       </div>
     </div>

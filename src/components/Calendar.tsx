@@ -7,11 +7,13 @@ interface Props {
   month: number;
   days: DayInfo[];
   onSelect: (day: DayInfo) => void;
+  /** Every day shows its moonrise and moonset nearest sunset (DayInfo.nearSunset) instead of events. */
+  showAll?: boolean;
 }
 
 const WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
-export function Calendar({ year, month, days, onSelect }: Props) {
+export function Calendar({ year, month, days, onSelect, showAll = false }: Props) {
   const leading = new Date(year, month, 1).getDay();
   const today = new Date();
   const isToday = (d: Date) =>
@@ -26,6 +28,21 @@ export function Calendar({ year, month, days, onSelect }: Props) {
         <div key={`pad-${i}`} className="day empty" />
       ))}
       {days.map((d) => {
+        if (showAll) {
+          const near = d.nearSunset;
+          const offset = (m: number | null | undefined) => (m == null ? '—' : fmtOffsetShort(m));
+          return (
+            <button key={d.date.getDate()} className={['day', 'all', isToday(d.date) && 'today'].filter(Boolean).join(' ')}
+              onClick={() => onSelect(d)}>
+              <span className="num">{d.date.getDate()}</span>
+              <span className="tile-all">
+                <span className="tile-all-row" title="Moonrise vs sunset"><SunsetFullMoonIcon size={14} />{offset(near?.moonriseMin)}</span>
+                <span className="tile-all-row" title="Moonset vs sunset"><SunsetCrescentIcon size={14} />{offset(near?.moonsetMin)}</span>
+                <span className="tile-all-pct">{fmtPctShort(d.illumination)}</span>
+              </span>
+            </button>
+          );
+        }
         const event = d.fullMoonEvent || d.newMoonEvent;
         const cls = ['day', event && 'event', d.fullMoonEvent && 'full', d.newMoonEvent && 'new', isToday(d.date) && 'today']
           .filter(Boolean)

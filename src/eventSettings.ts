@@ -2,6 +2,7 @@ import { DEFAULT_WINDOWS, MAX_WINDOWS, type EventWindows, type TimeWindow } from
 
 /** The user's event windows (the sliders under the calendar), kept on this device. */
 const STORAGE_KEY = 'sunsetmoonevents.windows';
+const SHOW_ALL_KEY = 'sunsetmoonevents.showAll';
 
 const clampWindow = (w: Partial<TimeWindow> | undefined, def: TimeWindow, max: TimeWindow): TimeWindow => {
   const num = (v: unknown, fallback: number) => (typeof v === 'number' && Number.isFinite(v) ? v : fallback);
@@ -32,6 +33,24 @@ export function saveWindows(w: EventWindows) {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(w));
   } catch {
     /* storage unavailable; the setting just won't persist */
+  }
+}
+
+/** "Show all events": every day shows its moonrise and moonset, ignoring the windows. */
+export function loadShowAll(): boolean {
+  try {
+    return localStorage.getItem(SHOW_ALL_KEY) === 'true';
+  } catch {
+    return false;
+  }
+}
+
+export function saveShowAll(on: boolean) {
+  try {
+    if (on) localStorage.setItem(SHOW_ALL_KEY, 'true');
+    else localStorage.removeItem(SHOW_ALL_KEY);
+  } catch {
+    /* storage unavailable */
   }
 }
 
